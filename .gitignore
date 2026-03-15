@@ -1,0 +1,31 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build output
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test and coverage
+*.test
+*.out
+coverage.out
+coverage.html
+
+# Air live-reload artifacts
+tmp/
+.air.toml.local
+
+# Logs
+*.log
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
