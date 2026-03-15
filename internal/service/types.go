@@ -14,6 +14,7 @@ type SearchParams struct {
 	HL       string
 	GL       string
 	AuthUser string
+	Limit    int
 }
 
 type DetailParams struct {

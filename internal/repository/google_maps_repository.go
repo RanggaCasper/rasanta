@@ -32,7 +32,7 @@ func (r *GoogleMapsRepository) FetchSearch(ctx context.Context, params service.S
 	values.Set("authuser", defaultString(params.AuthUser, "0"))
 	values.Set("hl", defaultString(params.HL, "id"))
 	values.Set("gl", defaultString(params.GL, "id"))
-	values.Set("pb", buildSearchPB(params.Lat, params.Lng, 13.1, 56329.51, 732, 683))
+	values.Set("pb", buildSearchPB(params.Lat, params.Lng, 13.1, 56329.51, 732, 683, params.Limit))
 	values.Set("q", params.Query)
 	values.Set("nfpr", "1")
 	values.Set("tch", "1")
@@ -92,16 +92,17 @@ func (r *GoogleMapsRepository) doRequest(ctx context.Context, endpoint string, q
 	return result, nil
 }
 
-func buildSearchPB(lat, lng, zoom, radius float64, width, height int) string {
+func buildSearchPB(lat, lng, zoom, radius float64, width, height, limit int) string {
 
 	pb := fmt.Sprintf(
-		"!4m12!1m3!1d%v!2d%v!3d%v!2m3!1f0!2f0!3f0!3m2!1i%d!2i%d!4f%v!7i20!10b1",
+		"!4m12!1m3!1d%v!2d%v!3d%v!2m3!1f0!2f0!3f0!3m2!1i%d!2i%d!4f%v!7i%v!10b1",
 		radius,
 		lng,
 		lat,
 		width,
 		height,
 		zoom,
+		limit,
 	)
 
 	return pb

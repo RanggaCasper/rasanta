@@ -24,7 +24,12 @@ func (h *PlaceHandler) Fetch(c *fiber.Ctx) error {
 	hl := c.Query("hl", "id")
 	gl := c.Query("gl", "id")
 	authUser := c.Query("authuser", "0")
+	limit := c.Query("limit", "20")
 
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": fmt.Sprintf("invalid limit value: %q", limit)})
+	}
 
 	lat, err := parseFloatQuery(c.Query("lat"), -7.2575)
 	if err != nil {
@@ -43,6 +48,7 @@ func (h *PlaceHandler) Fetch(c *fiber.Ctx) error {
 		HL:       hl,
 		GL:       gl,
 		AuthUser: authUser,
+		Limit:    limitInt,
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
