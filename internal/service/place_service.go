@@ -37,6 +37,10 @@ func (s *placeService) FetchSearch(ctx context.Context, params SearchParams) (in
 		return result.StatusCode, nil, fmt.Errorf("place block tidak ditemukan")
 	}
 
+	if params.UseSAW {
+		places = rankPlacesWithSAW(places, params.RatingWeight, params.ReviewsWeight, params.PriceWeight)
+	}
+
 	return result.StatusCode, places, nil
 }
 

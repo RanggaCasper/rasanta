@@ -15,6 +15,11 @@ type SearchParams struct {
 	GL       string
 	AuthUser string
 	Limit    int
+	UseSAW   bool
+
+	RatingWeight  float64
+	ReviewsWeight float64
+	PriceWeight   float64
 }
 
 type DetailParams struct {

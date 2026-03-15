@@ -25,6 +25,25 @@ func (h *PlaceHandler) Fetch(c *fiber.Ctx) error {
 	gl := c.Query("gl", "id")
 	authUser := c.Query("authuser", "0")
 	limit := c.Query("limit", "20")
+	useSAW, err := parseBoolQuery(c.Query("saw"), false)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	ratingWeight, err := parseFloatQuery(c.Query("rating_weight"), 0.6)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	reviewsWeight, err := parseFloatQuery(c.Query("reviews_weight"), 0.3)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	priceWeight, err := parseFloatQuery(c.Query("price_weight"), 0.1)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
 
 	limitInt, err := strconv.Atoi(limit)
 	if err != nil {
@@ -42,13 +61,17 @@ func (h *PlaceHandler) Fetch(c *fiber.Ctx) error {
 	}
 
 	statusCode, places, err := h.service.FetchSearch(requestContext(c), service.SearchParams{
-		Query:    query,
-		Lat:      lat,
-		Lng:      lng,
-		HL:       hl,
-		GL:       gl,
-		AuthUser: authUser,
-		Limit:    limitInt,
+		Query:         query,
+		Lat:           lat,
+		Lng:           lng,
+		HL:            hl,
+		GL:            gl,
+		AuthUser:      authUser,
+		Limit:         limitInt,
+		UseSAW:        useSAW,
+		RatingWeight:  ratingWeight,
+		ReviewsWeight: reviewsWeight,
+		PriceWeight:   priceWeight,
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
@@ -129,6 +152,19 @@ func parseIntQuery(raw string, fallback int) (int, error) {
 	value, err := strconv.Atoi(raw)
 	if err != nil {
 		return 0, fmt.Errorf("invalid int value %q", raw)
+	}
+
+	return value, nil
+}
+
+func parseBoolQuery(raw string, fallback bool) (bool, error) {
+	if raw == "" {
+		return fallback, nil
+	}
+
+	value, err := strconv.ParseBool(raw)
+	if err != nil {
+		return false, fmt.Errorf("invalid bool value %q", raw)
 	}
 
 	return value, nil
