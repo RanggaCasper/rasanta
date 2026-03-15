@@ -10,7 +10,6 @@ help:
 	@echo "  tidy      - Tidy go.mod/go.sum"
 	@echo "  build     - Build binary to bin/"
 	@echo "  run       - Run server on default port"
-	@echo "  run-alt   - Run server on port 3011"
 	@echo "  dev       - Run hot reload using Air (.air.toml)"
 	@echo "  air-install - Install Air CLI"
 	@echo "  test      - Run tests"
@@ -29,9 +28,6 @@ build:
 
 run:
 	@go run $(MAIN_PATH)
-
-run-alt:
-	@PORT=3011 go run $(MAIN_PATH)
 
 dev:
 	@air -c .air.toml

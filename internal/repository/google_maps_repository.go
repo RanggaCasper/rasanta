@@ -36,9 +36,9 @@ func (r *GoogleMapsRepository) FetchSearch(ctx context.Context, params service.S
 	values.Set("q", params.Query)
 	values.Set("nfpr", "1")
 	values.Set("tch", "1")
-	values.Set("ech", "10")
+	values.Set("ech", "1")
 
-	return r.doRequest(ctx, "https://www.google.com/search", values, nil)
+	return r.doRequest(ctx, "https://www.google.com/search", values)
 }
 
 func (r *GoogleMapsRepository) FetchDetail(ctx context.Context, params service.DetailParams) (*service.FetchResult, error) {
@@ -51,10 +51,10 @@ func (r *GoogleMapsRepository) FetchDetail(ctx context.Context, params service.D
 		values.Set("q", params.Q)
 	}
 
-	return r.doRequest(ctx, "https://www.google.com/maps/preview/place", values, params.ForwardHeaders)
+	return r.doRequest(ctx, "https://www.google.com/maps/preview/place", values)
 }
 
-func (r *GoogleMapsRepository) doRequest(ctx context.Context, endpoint string, query url.Values, forwardHeaders map[string]string) (*service.FetchResult, error) {
+func (r *GoogleMapsRepository) doRequest(ctx context.Context, endpoint string, query url.Values) (*service.FetchResult, error) {
 	requestURL := endpoint + "?" + query.Encode()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
 	if err != nil {
@@ -67,12 +67,6 @@ func (r *GoogleMapsRepository) doRequest(ctx context.Context, endpoint string, q
 	req.Header.Set("user-agent", defaultString(r.userAgent, "Mozilla/5.0"))
 	if r.defaultCookie != "" {
 		req.Header.Set("cookie", r.defaultCookie)
-	}
-	for key, value := range forwardHeaders {
-		if value == "" {
-			continue
-		}
-		req.Header.Set(key, value)
 	}
 
 	resp, err := r.client.Do(req)
@@ -99,8 +93,8 @@ func (r *GoogleMapsRepository) doRequest(ctx context.Context, endpoint string, q
 }
 
 func buildSearchPB(lat, lng, zoom, radius float64, width, height int) string {
-	// Format PB untuk pencarian tempat di Google Maps.
-	return fmt.Sprintf(
+
+	pb := fmt.Sprintf(
 		"!4m12!1m3!1d%v!2d%v!3d%v!2m3!1f0!2f0!3f0!3m2!1i%d!2i%d!4f%v!7i20!10b1",
 		radius,
 		lng,
@@ -109,6 +103,8 @@ func buildSearchPB(lat, lng, zoom, radius float64, width, height int) string {
 		height,
 		zoom,
 	)
+
+	return pb
 }
 
 func defaultString(value, fallback string) string {

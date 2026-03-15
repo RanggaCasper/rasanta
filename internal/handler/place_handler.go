@@ -20,10 +20,11 @@ func NewPlaceHandler(service service.PlaceService) *PlaceHandler {
 }
 
 func (h *PlaceHandler) Fetch(c *fiber.Ctx) error {
-	query := c.Query("query", "restaurant")
+	query := c.Query("query", "bali")
 	hl := c.Query("hl", "id")
 	gl := c.Query("gl", "id")
 	authUser := c.Query("authuser", "0")
+
 
 	lat, err := parseFloatQuery(c.Query("lat"), -7.2575)
 	if err != nil {
@@ -111,6 +112,19 @@ func parseFloatQuery(raw string, fallback float64) (float64, error) {
 	if err != nil {
 		return 0, fmt.Errorf("invalid float value %q", raw)
 	}
+	return value, nil
+}
+
+func parseIntQuery(raw string, fallback int) (int, error) {
+	if raw == "" {
+		return fallback, nil
+	}
+
+	value, err := strconv.Atoi(raw)
+	if err != nil {
+		return 0, fmt.Errorf("invalid int value %q", raw)
+	}
+
 	return value, nil
 }
 

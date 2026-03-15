@@ -17,12 +17,11 @@ type SearchParams struct {
 }
 
 type DetailParams struct {
-	PB             string
-	Q              string
-	HL             string
-	GL             string
-	AuthUser       string
-	ForwardHeaders map[string]string
+	PB       string
+	Q        string
+	HL       string
+	GL       string
+	AuthUser string
 }
 
 type Repository interface {
