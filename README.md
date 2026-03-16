@@ -30,7 +30,7 @@ cp .env.example .env
 
 2. Isi nilai penting:
 
-- `PORT` (default backend di `3000`)
+- `PORT` (default backend di `8000`)
 - `HTTP_TIMEOUT_SECONDS`
 - `GOOGLE_MAPS_USER_AGENT`
 - `GOOGLE_MAPS_COOKIE_FILE` atau `GOOGLE_MAPS_COOKIE`
@@ -95,7 +95,7 @@ Query params yang umum dipakai:
 Contoh:
 
 ```bash
-curl "http://localhost:3000/api/v1/places?query=restaurant&lat=-7.2575&lng=112.7521&limit=20&saw=true&hl=id&gl=US&authuser=0"
+curl "http://localhost:8000/api/v1/places?query=restaurant&lat=-7.2575&lng=112.7521&limit=20&saw=true&hl=id&gl=US&authuser=0"
 ```
 
 ### 2) GET /api/v1/places/detail
@@ -115,7 +115,7 @@ Query params tambahan:
 Contoh:
 
 ```bash
-curl "http://localhost:3000/api/v1/places/detail?data_id=0x2dd7f...&lat=-7.2575&long=112.7521&hl=id&gl=US&authuser=0"
+curl "http://localhost:8000/api/v1/places/detail?data_id=0x2dd7f...&lat=-7.2575&long=112.7521&hl=id&gl=US&authuser=0"
 ```
 
 ## Struktur Folder (Backend)
@@ -132,7 +132,7 @@ curl "http://localhost:3000/api/v1/places/detail?data_id=0x2dd7f...&lat=-7.2575&
 
 Frontend ada di folder `website/`, default memanggil backend di:
 
-- `http://localhost:3000`
+- `http://localhost:8000`
 
 Pastikan backend aktif sebelum menjalankan frontend.
 

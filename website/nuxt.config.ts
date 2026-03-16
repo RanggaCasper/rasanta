@@ -14,7 +14,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: 'http://localhost:3000'
+      apiBase: 'http://localhost:8000'
     }
   },
 
@@ -23,7 +23,7 @@ export default defineNuxtConfig({
   },
 
   devServer: {
-    port: 3001
+    port: 3000
   },
 
   compatibilityDate: '2025-01-15',

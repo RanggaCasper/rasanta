@@ -24,7 +24,7 @@ func Load() Config {
 
 	return Config{
 		AppName:             getEnv("APP_NAME", "Rasanta"),
-		Port:                getEnv("PORT", "3000"),
+		Port:                getEnv("PORT", "8000"),
 		HTTPTimeout:         time.Duration(getEnvInt("HTTP_TIMEOUT_SECONDS", 30)) * time.Second,
 		GoogleMapsUserAgent: getEnv("GOOGLE_MAPS_USER_AGENT", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"),
 		GoogleMapsCookie:    loadCookie(),
