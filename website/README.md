@@ -1,60 +1,87 @@
-# Nuxt Starter Template
+# Rasanta Frontend (Nuxt 4)
 
-[![Nuxt UI](https://img.shields.io/badge/Made%20with-Nuxt%20UI-00DC82?logo=nuxt&labelColor=020420)](https://ui.nuxt.com)
+Frontend Rasanta adalah web app untuk eksplorasi tempat/restaurant berbasis peta, filter, sorting, dan detail place.
 
-Use this template to get started with [Nuxt UI](https://ui.nuxt.com) quickly.
+## Stack
 
-- [Live demo](https://starter-template.nuxt.dev/)
-- [Documentation](https://ui.nuxt.com/docs/getting-started/installation/nuxt)
+- Nuxt 4
+- Vue 3 + TypeScript
+- Pinia
+- Nuxt UI
+- Leaflet
 
-<a href="https://starter-template.nuxt.dev/" target="_blank">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png">
-    <img alt="Nuxt Starter Template" src="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png" width="830" height="466">
-  </picture>
-</a>
+## Prasyarat
 
-> The starter template for Vue is on https://github.com/nuxt-ui-templates/starter-vue.
+- Node.js 20+
+- pnpm (repo ini menggunakan `pnpm@10`)
+- Backend Rasanta aktif di `http://localhost:3000`
 
-## Quick Start
-
-```bash [Terminal]
-npm create nuxt@latest -- -t ui
-```
-
-## Deploy your own
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-name=starter&repository-url=https%3A%2F%2Fgithub.com%2Fnuxt-ui-templates%2Fstarter&demo-image=https%3A%2F%2Fui.nuxt.com%2Fassets%2Ftemplates%2Fnuxt%2Fstarter-dark.png&demo-url=https%3A%2F%2Fstarter-template.nuxt.dev%2F&demo-title=Nuxt%20Starter%20Template&demo-description=A%20minimal%20template%20to%20get%20started%20with%20Nuxt%20UI.)
-
-## Setup
-
-Make sure to install the dependencies:
+## Instalasi
 
 ```bash
 pnpm install
 ```
 
-## Development Server
+## Menjalankan Frontend
 
-Start the development server on `http://localhost:3000`:
+Development server (default port frontend: `3001`):
 
 ```bash
 pnpm dev
 ```
 
-## Production
+Setelah jalan, buka:
 
-Build the application for production:
+- `http://localhost:3001`
+
+## Konfigurasi API Backend
+
+Secara default frontend memanggil backend ke `http://localhost:3000`.
+
+Jika perlu ganti endpoint backend, set env variable berikut sebelum menjalankan app:
 
 ```bash
-pnpm build
+NUXT_PUBLIC_API_BASE=http://localhost:3000
 ```
 
-Locally preview production build:
+## Script yang Tersedia
 
 ```bash
-pnpm preview
+pnpm dev        # jalankan development server
+pnpm build      # build production
+pnpm preview    # preview hasil build production
+pnpm lint       # linting
+pnpm typecheck  # type checking (nuxt typecheck)
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+## Fitur Utama
+
+- Pemilihan lokasi dari browser geolocation dan fallback IP location
+- Query preset (Restaurant, Cafe, Bakso, Mie, dan lainnya)
+- Smart Ranking (SAW) toggle
+- Filter chips (price, open now, delivery, takeout, halal, alcohol)
+- Sorting (recommended, rating, reviews, distance)
+- Lazy prefetch detail:
+  - Saat card restoran masuk viewport list
+  - Saat pin di map di-hover
+
+## Struktur Folder Inti
+
+- `app/pages/index.vue` - halaman utama (state orchestration)
+- `app/stores/restaurantMap.ts` - fetch list/detail dan cache
+- `app/components/maps/LeafletMap.vue` - peta dan pin interaksi
+- `app/components/maps/RestaurantExplorerPanel.vue` - list, filter, sort, detail panel
+- `app/composables/useUserLocation.ts` - geolocation + fallback IP
+- `i18n/locales` - terjemahan Indonesia dan English
+
+## Catatan Pengembangan
+
+- Frontend memanggil endpoint backend:
+  - `GET /api/v1/places`
+  - `GET /api/v1/places/detail`
+- Proxy lokal IP location tersedia di route frontend:
+  - `GET /api/ip-location`
+
+## License
+
+Proyek ini dilisensikan di bawah [MIT License](../LICENSE).
