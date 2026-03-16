@@ -1,0 +1,81 @@
+{
+  "language": {
+    "label": "Bahasa"
+  },
+  "action": {
+    "useMyLocation": "Lokasi Saya",
+    "hideSidebar": "Tutup Sidebar",
+    "openSidebar": "Buka Sidebar",
+    "share": "Bagikan",
+    "favorite": "Favorit",
+    "unfavorite": "Tersimpan",
+    "writeReview": "Tulis Ulasan",
+    "directions": "Petunjuk Arah"
+  },
+  "panel": {
+    "restaurants": "Restoran",
+    "sort": "Urutkan",
+    "recommended": "Rekomendasi",
+    "source": "Sumber",
+    "placeDetail": "Detail Tempat",
+    "openWebsite": "Buka Website",
+    "empty": "Tidak ada restoran untuk koordinat ini.",
+    "noStatus": "Status tidak tersedia",
+    "noPhone": "Telepon tidak tersedia",
+    "noReviews": "tanpa ulasan",
+    "reviews": "{count} ulasan",
+    "headline": "Top {count} Restoran Terbaik Dekat {area}",
+    "thisArea": "area ini",
+    "detailInformation": "Informasi",
+    "detailServices": "Fasilitas & Layanan",
+    "detailExtensions": "Extensions",
+    "detailUnsupportedExtensions": "Unsupported Extensions",
+    "detailOperatingHours": "Jam Operasional",
+    "detailReviewHighlights": "Cuplikan Ulasan",
+    "detailGallery": "Galeri",
+    "detailNoPhoto": "Foto belum tersedia",
+    "noData": "Data belum tersedia",
+    "serviceDineIn": "Makan di Tempat",
+    "locationAndHours": "Lokasi & Jam",
+    "locationPreview": "Pratinjau Lokasi"
+  },
+  "map": {
+    "credit": "Leaflet + OpenStreetMap"
+  },
+  "chip": {
+    "all": "Semua",
+    "price": "Harga",
+    "openNow": "Buka Sekarang",
+    "reservations": "Reservasi",
+    "delivery": "Antar",
+    "takeout": "Bawa Pulang"
+  },
+  "source": {
+    "browser": "GPS Browser",
+    "ip": "Berbasis IP",
+    "search": "Pin",
+    "default": "Default"
+  },
+  "location": {
+    "defaultLabel": "Monumen Nasional, Jakarta",
+    "currentLabel": "Lokasi Anda saat ini",
+    "ipLabel": "Lokasi Anda saat ini",
+    "waiting": "Menunggu deteksi lokasi...",
+    "requestingBrowser": "Meminta lokasi dari browser...",
+    "browserOk": "Lokasi browser berhasil digunakan.",
+    "browserDenied": "Izin lokasi tidak tersedia. Beralih ke deteksi IP...",
+    "ipOk": "Lokasi dari IP berhasil digunakan.",
+    "fallback": "Lokasi default dipakai karena deteksi gagal.",
+    "readFailed": "Gagal membaca lokasi browser dan IP.",
+    "manualUpdated": "Titik lokasi berhasil diperbarui.",
+    "pinLabel": "Pin {lat}, {lng}",
+    "browserNotSupported": "Geolocation tidak didukung browser",
+    "ipRequestFailed": "Permintaan lokasi IP gagal",
+    "ipInvalid": "Data lokasi IP tidak valid"
+  },
+  "api": {
+    "fetchRestaurantsFailed": "Gagal mengambil data restoran dari backend.",
+    "fetchDetailFailed": "Gagal mengambil detail restoran.",
+    "dataIdMissing": "Detail tidak tersedia karena data_id kosong."
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "language": {
+    "label": "Language"
+  },
+  "action": {
+    "useMyLocation": "My Location",
+    "hideSidebar": "Hide Sidebar",
+    "openSidebar": "Open Sidebar",
+    "share": "Share",
+    "favorite": "Favorite",
+    "unfavorite": "Saved",
+    "writeReview": "Write a Review",
+    "directions": "Directions"
+  },
+  "panel": {
+    "restaurants": "Restaurants",
+    "sort": "Sort",
+    "recommended": "Recommended",
+    "source": "Source",
+    "placeDetail": "Place Detail",
+    "openWebsite": "Open Website",
+    "empty": "No restaurants found for this coordinate.",
+    "noStatus": "Status unavailable",
+    "noPhone": "Phone unavailable",
+    "noReviews": "no reviews",
+    "reviews": "{count} reviews",
+    "headline": "Top {count} Best Restaurants Near {area}",
+    "thisArea": "this area",
+    "detailInformation": "Information",
+    "detailServices": "Facilities & Services",
+    "detailExtensions": "Extensions",
+    "detailUnsupportedExtensions": "Unsupported Extensions",
+    "detailOperatingHours": "Operating Hours",
+    "detailReviewHighlights": "Review Highlights",
+    "detailGallery": "Gallery",
+    "detailNoPhoto": "No photo available",
+    "noData": "No data available",
+    "serviceDineIn": "Dine In",
+    "locationAndHours": "Location & Hours",
+    "locationPreview": "Location Preview"
+  },
+  "map": {
+    "credit": "Leaflet + OpenStreetMap"
+  },
+  "chip": {
+    "all": "All",
+    "price": "Price",
+    "openNow": "Open Now",
+    "reservations": "Reservations",
+    "delivery": "Delivery",
+    "takeout": "Takeout"
+  },
+  "source": {
+    "browser": "Browser GPS",
+    "ip": "IP Based",
+    "search": "Pinned",
+    "default": "Default"
+  },
+  "location": {
+    "defaultLabel": "National Monument, Jakarta",
+    "currentLabel": "Your current location",
+    "ipLabel": "Your current location",
+    "waiting": "Waiting for location detection...",
+    "requestingBrowser": "Requesting location from browser...",
+    "browserOk": "Browser location detected successfully.",
+    "browserDenied": "Location permission unavailable. Falling back to IP detection...",
+    "ipOk": "IP-based location detected successfully.",
+    "fallback": "Using default location because detection failed.",
+    "readFailed": "Failed to read browser and IP location.",
+    "manualUpdated": "Location point updated successfully.",
+    "pinLabel": "Pin {lat}, {lng}",
+    "browserNotSupported": "Geolocation is not supported by this browser",
+    "ipRequestFailed": "IP location request failed",
+    "ipInvalid": "IP location data is invalid"
+  },
+  "api": {
+    "fetchRestaurantsFailed": "Failed to fetch restaurant data from backend.",
+    "fetchDetailFailed": "Failed to fetch restaurant detail.",
+    "dataIdMissing": "Detail is unavailable because data_id is empty."
+  }
+}
