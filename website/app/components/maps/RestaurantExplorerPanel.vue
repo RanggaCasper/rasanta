@@ -581,7 +581,7 @@ function formatPlaceMeta(restaurant: RestaurantPin): string {
 
 <template>
   <aside
-    class="relative grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-4 overflow-hidden overscroll-contain border-r border-slate-200 bg-white px-6 pb-4 pt-7 max-[900px]:h-screen max-[900px]:min-h-screen max-[900px]:border-b max-[900px]:border-r-0 max-[640px]:px-3.5 max-[640px]:pb-3.5 max-[640px]:pt-4 lg:h-screen lg:min-h-screen"
+    class="relative grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-4 overflow-hidden overscroll-contain border-r border-slate-200 bg-white px-6 pb-4 pt-7 max-[900px]:h-screen max-[900px]:min-h-screen max-[900px]:border-b max-[900px]:border-r-0 max-[900px]:pb-[calc(env(safe-area-inset-bottom)+12px)] max-[900px]:pt-[calc(env(safe-area-inset-top)+14px)] max-[640px]:px-3.5 max-[640px]:pb-[calc(env(safe-area-inset-bottom)+10px)] max-[640px]:pt-[calc(env(safe-area-inset-top)+10px)] lg:h-screen lg:min-h-screen"
   >
     <header class="grid gap-3">
       <div class="flex items-center justify-between gap-3">
@@ -594,13 +594,15 @@ function formatPlaceMeta(restaurant: RestaurantPin): string {
           variant="soft"
           icon="i-lucide-x"
           class="lg:hidden"
+          aria-label="Close sidebar"
           @click="emit('toggleSidebar')"
         >
+          Close
         </UButton>
       </div>
 
       <div>
-        <h1 class="m-0 text-[2.4rem] font-semibold tracking-[-0.02em] text-slate-900">
+        <h1 class="m-0 text-[2.4rem] font-semibold tracking-[-0.02em] text-slate-900 max-[900px]:text-[1.9rem] max-[640px]:text-[1.45rem] max-[640px]:leading-[1.15]">
           {{ headline }}
         </h1>
       </div>
@@ -818,8 +820,11 @@ function formatPlaceMeta(restaurant: RestaurantPin): string {
                   color="neutral"
                   variant="ghost"
                   size="sm"
+                  aria-label="Back to list"
                   @click="emit('closeDetail')"
-                />
+                >
+                  Back
+                </UButton>
               </div>
             </div>
 
