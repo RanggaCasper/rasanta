@@ -6,10 +6,15 @@ import type {
   RestaurantDetailResponse,
   RestaurantPin
 } from '~/types/restaurant'
-import { RESTAURANT_SEARCH_CONFIG } from '~/config/places'
+import { RESTAURANT_SEARCH_CONFIG, RESTAURANT_SEARCH_GL } from '~/config/places'
 
 const THUMBNAIL_SCALE_FACTOR = 5
 const THUMBNAIL_MAX_DIMENSION = 8192
+
+interface FetchRestaurantsOptions {
+  saw?: boolean
+  query?: string
+}
 
 export const useRestaurantMapStore = defineStore('restaurant-map', () => {
   const { restaurantApiLocale, t } = useAppI18n()
@@ -32,7 +37,7 @@ export const useRestaurantMapStore = defineStore('restaurant-map', () => {
   const pendingDetailRequests = new Map<string, Promise<RestaurantDetailResponse>>()
   let requestId = 0
 
-  async function fetchRestaurantsByCoordinate(coordinate: Coordinate) {
+  async function fetchRestaurantsByCoordinate(coordinate: Coordinate, options: FetchRestaurantsOptions = {}) {
     if (import.meta.server) {
       return
     }
@@ -46,13 +51,13 @@ export const useRestaurantMapStore = defineStore('restaurant-map', () => {
     try {
       const response = await $fetch<RestaurantApiResponse>(`${apiBase}/api/v1/places`, {
         params: {
-          query: RESTAURANT_SEARCH_CONFIG.query,
+          query: options.query ?? RESTAURANT_SEARCH_CONFIG.query,
           lat: coordinate.lat,
           lng: coordinate.lng,
           limit: RESTAURANT_SEARCH_CONFIG.limit,
-          saw: RESTAURANT_SEARCH_CONFIG.saw,
+          saw: options.saw ?? RESTAURANT_SEARCH_CONFIG.saw,
           hl: restaurantApiLocale.value.hl,
-          gl: restaurantApiLocale.value.gl,
+          gl: RESTAURANT_SEARCH_GL,
           authuser: RESTAURANT_SEARCH_CONFIG.authuser
         }
       })
@@ -76,8 +81,6 @@ export const useRestaurantMapStore = defineStore('restaurant-map', () => {
           closeRestaurantDetail()
         }
       }
-
-      void hydrateRestaurantThumbnails(mapped, currentRequest)
     } catch (err) {
       if (currentRequest !== requestId) {
         return
@@ -220,47 +223,37 @@ export const useRestaurantMapStore = defineStore('restaurant-map', () => {
     }
   }
 
-  async function hydrateRestaurantThumbnails(restaurantList: RestaurantPin[], activeRequestId: number) {
-    const targets = restaurantList.filter(item => !item.thumbnail && item.dataId)
-    if (targets.length === 0) {
+  async function prefetchRestaurantDetail(restaurant: RestaurantPin) {
+    if (!restaurant.dataId) {
       return
     }
 
-    const workerCount = Math.min(3, targets.length)
-    let cursor = 0
+    const cacheKey = makeDetailCacheKey(restaurant)
+    if (detailCache.value[cacheKey]) {
+      return
+    }
 
-    const workers = Array.from({ length: workerCount }, async () => {
-      while (cursor < targets.length && activeRequestId === requestId) {
-        const current = targets[cursor]
-        cursor += 1
+    try {
+      const response = await requestRestaurantDetail(restaurant)
 
-        if (!current) {
-          continue
-        }
+      const normalized = normalizeRestaurant(response.data, {
+        lat: restaurant.lat,
+        lng: restaurant.lng
+      })
 
-        try {
-          const response = await requestRestaurantDetail(current)
-          const normalized = normalizeRestaurant(response.data, {
-            lat: current.lat,
-            lng: current.lng
-          })
-
-          const nextDetail: RestaurantDetail = {
-            summary: normalized || current,
-            raw: asRecord(response.data)
-          }
-          detailCache.value[makeDetailCacheKey(current)] = nextDetail
-
-          if (normalized?.thumbnail) {
-            applyThumbnail(current.id, normalized.thumbnail, activeRequestId)
-          }
-        } catch {
-          // Ignore thumbnail prefetch errors to keep list rendering responsive.
-        }
+      const nextDetail: RestaurantDetail = {
+        summary: normalized || restaurant,
+        raw: asRecord(response.data)
       }
-    })
 
-    await Promise.all(workers)
+      detailCache.value[cacheKey] = nextDetail
+
+      if (normalized?.thumbnail) {
+        applyThumbnail(restaurant.id, normalized.thumbnail, requestId)
+      }
+    } catch {
+      // Ignore prefetch errors silently.
+    }
   }
 
   function closeRestaurantDetail() {
@@ -288,6 +281,7 @@ export const useRestaurantMapStore = defineStore('restaurant-map', () => {
     detailCache,
     fetchRestaurantsByCoordinate,
     openRestaurantDetail,
+    prefetchRestaurantDetail,
     closeRestaurantDetail,
     clearDetailCache
   }
@@ -322,8 +316,73 @@ function normalizeRestaurant(input: unknown, fallbackCoordinate?: { lat: number,
     price: toText(raw.price),
     thumbnail: upscaleThumbnailUrl(toText(raw.thumbnail)),
     phone: toText(raw.phone),
-    website: toText(raw.website)
+    website: toText(raw.website),
+    serviceOptions: toServiceOptions(raw.service_options),
+    extensionOfferings: toExtensionOfferings(
+      raw.extension ?? raw.extensions ?? raw.feature_extensions
+    )
   }
+}
+
+function toServiceOptions(input: unknown): Record<string, boolean> {
+  const value = asRecord(input)
+
+  return Object.entries(value).reduce<Record<string, boolean>>((acc, [key, rawValue]) => {
+    acc[key] = Boolean(rawValue)
+    return acc
+  }, {})
+}
+
+function toExtensionOfferings(input: unknown): string[] {
+  const offerings: string[] = []
+  const seen = new Set<string>()
+
+  const pushOffering = (value: unknown) => {
+    const text = toText(value)
+    if (!text) {
+      return
+    }
+
+    const normalized = text.toLowerCase()
+    if (seen.has(normalized)) {
+      return
+    }
+
+    seen.add(normalized)
+    offerings.push(text)
+  }
+
+  const walk = (value: unknown) => {
+    if (Array.isArray(value)) {
+      value.forEach(item => {
+        walk(item)
+      })
+      return
+    }
+
+    if (!value || typeof value !== 'object') {
+      return
+    }
+
+    const record = asRecord(value)
+
+    Object.entries(record).forEach(([key, entry]) => {
+      if (key.trim().toLowerCase() === 'offerings') {
+        if (Array.isArray(entry)) {
+          entry.forEach(pushOffering)
+          return
+        }
+
+        pushOffering(entry)
+        return
+      }
+
+      walk(entry)
+    })
+  }
+
+  walk(input)
+  return offerings
 }
 
 function upscaleThumbnailUrl(url: string | null): string | null {

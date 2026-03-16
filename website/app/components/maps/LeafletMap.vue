@@ -16,6 +16,7 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   pickLocation: [value: Coordinate]
   selectRestaurant: [value: RestaurantPin]
+  prefetchRestaurant: [value: RestaurantPin]
 }>()
 
 const mapElement = ref<HTMLElement | null>(null)
@@ -167,6 +168,7 @@ function syncRestaurants(restaurants: RestaurantPin[]) {
 
       markerRestaurant.on('mouseover', () => {
         markerRestaurant.openTooltip()
+        emit('prefetchRestaurant', restaurant)
       })
 
       markerRestaurant.on('mouseout', () => {

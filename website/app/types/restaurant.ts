@@ -14,7 +14,24 @@ export interface RestaurantPin {
   thumbnail: string | null
   phone: string | null
   website: string | null
+  serviceOptions: Record<string, boolean>
+  extensionOfferings: string[]
 }
+
+export type RestaurantListFilter =
+  | 'all'
+  | 'price'
+  | 'open_now'
+  | 'delivery'
+  | 'takeout'
+  | 'halal'
+  | 'alcohol'
+
+export type RestaurantSortOption =
+  | 'recommended'
+  | 'rating_desc'
+  | 'reviews_desc'
+  | 'distance_asc'
 
 export interface RestaurantDetail {
   summary: RestaurantPin

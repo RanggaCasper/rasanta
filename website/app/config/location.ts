@@ -11,4 +11,4 @@ export const BROWSER_GEOLOCATION_OPTIONS: PositionOptions = {
   maximumAge: 0
 }
 
-export const IP_LOCATION_ENDPOINT = 'https://ipwho.is/'
+export const IP_LOCATION_ENDPOINT = 'http://ip-api.com/json'

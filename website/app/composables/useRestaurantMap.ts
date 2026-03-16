@@ -8,6 +8,7 @@ export function useRestaurantMap() {
     ...storeToRefs(store),
     fetchRestaurantsByCoordinate: store.fetchRestaurantsByCoordinate,
     openRestaurantDetail: store.openRestaurantDetail,
+    prefetchRestaurantDetail: store.prefetchRestaurantDetail,
     closeRestaurantDetail: store.closeRestaurantDetail,
     clearDetailCache: store.clearDetailCache
   }

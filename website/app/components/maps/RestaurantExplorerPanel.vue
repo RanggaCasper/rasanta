@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import type { Coordinate, CoordinateSource } from "~/types/location";
-import type { RestaurantDetail, RestaurantPin } from "~/types/restaurant";
+import type {
+  RestaurantDetail,
+  RestaurantListFilter,
+  RestaurantPin,
+  RestaurantSortOption,
+} from "~/types/restaurant";
+import type { QueryPreset } from "~/config/places";
 
 const props = defineProps<{
   coordinate: Coordinate;
@@ -12,6 +18,11 @@ const props = defineProps<{
   restaurantsError: string;
   restaurants: RestaurantPin[];
   restaurantCount: number;
+  sawEnabled: boolean;
+  activeFilter: RestaurantListFilter;
+  sortBy: RestaurantSortOption;
+  activeQuery: string;
+  queryPresets: QueryPreset[];
   selectedRestaurantId: string | null;
   detail: RestaurantDetail | null;
   detailLoading: boolean;
@@ -24,6 +35,11 @@ const emit = defineEmits<{
   openDetail: [value: RestaurantPin];
   closeDetail: [];
   toggleSidebar: [];
+  toggleSaw: [];
+  changeFilter: [value: RestaurantListFilter];
+  changeSort: [value: RestaurantSortOption];
+  changeQuery: [value: string];
+  prefetchDetail: [value: RestaurantPin];
 }>();
 
 const { t } = useAppI18n();
@@ -40,23 +56,122 @@ const sourceLabel = computed(() => {
   return t("source.default");
 });
 
+const activeQueryLabel = computed(() => {
+  const preset = props.queryPresets.find((item) => item.value === props.activeQuery);
+  if (preset?.label) {
+    return preset.label;
+  }
+
+  const fallback = props.activeQuery.trim();
+  if (fallback.length > 0) {
+    return fallback;
+  }
+
+  return t("panel.restaurants");
+});
+
 const headline = computed(() => {
   const base = props.label.split(",")[0]?.trim() || t("panel.thisArea");
   return t("panel.headline", {
     count: Math.max(props.restaurantCount, 1),
     area: base,
+    query: activeQueryLabel.value,
   });
 });
 
 const chips = computed(() => {
   return [
-    t("chip.all"),
-    t("chip.price"),
-    t("chip.openNow"),
-    t("chip.reservations"),
-    t("chip.delivery"),
-    t("chip.takeout"),
+    {
+      key: "all" as const,
+      label: t("chip.all"),
+    },
+    {
+      key: "price" as const,
+      label: t("chip.price"),
+    },
+    {
+      key: "open_now" as const,
+      label: t("chip.openNow"),
+    },
+    {
+      key: "delivery" as const,
+      label: t("chip.delivery"),
+    },
+    {
+      key: "takeout" as const,
+      label: t("chip.takeout"),
+    },
+    {
+      key: "halal" as const,
+      label: t("chip.halal"),
+    },
+    {
+      key: "alcohol" as const,
+      label: t("chip.alcohol"),
+    },
   ];
+});
+
+const sortOptions = computed(() => {
+  return [
+    {
+      key: "recommended" as const,
+      label: t("sortOption.recommended"),
+    },
+    {
+      key: "rating_desc" as const,
+      label: t("sortOption.ratingDesc"),
+    },
+    {
+      key: "reviews_desc" as const,
+      label: t("sortOption.reviewsDesc"),
+    },
+    {
+      key: "distance_asc" as const,
+      label: t("sortOption.distanceAsc"),
+    },
+  ];
+});
+
+const sawLabel = computed(() => {
+  return props.sawEnabled ? t("panel.sawEnabled") : t("panel.sawDisabled");
+});
+
+let cardObserver: IntersectionObserver | null = null;
+const observedCards = new WeakMap<HTMLElement, RestaurantPin>();
+
+function observeCard(el: HTMLElement | null, restaurant: RestaurantPin) {
+  if (!cardObserver || !el) {
+    return;
+  }
+  observedCards.set(el, restaurant);
+  cardObserver.observe(el);
+}
+
+onMounted(() => {
+  if (!import.meta.client || typeof IntersectionObserver === 'undefined') {
+    return;
+  }
+  cardObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) {
+          continue;
+        }
+        const restaurant = observedCards.get(entry.target as HTMLElement);
+        if (restaurant) {
+          emit('prefetchDetail', restaurant);
+        }
+        cardObserver?.unobserve(entry.target);
+      }
+    },
+    { threshold: 0.25 }
+  );
+});
+
+onUnmounted(() => {
+  cardObserver?.disconnect();
+  cardObserver = null;
 });
 
 const detailSummary = computed(() => props.detail?.summary ?? null);
@@ -98,19 +213,6 @@ const detailStatusClass = computed(() => {
   return detailIsClosed.value
     ? "bg-red-500/90 text-white"
     : "bg-emerald-500/90 text-white";
-});
-
-const detailFavoriteLabel = computed(() => {
-  return detailIsFavorite.value ? t("action.unfavorite") : t("action.favorite");
-});
-
-const detailIsFavorite = computed(() => {
-  const id = detailSummary.value?.id;
-  if (!id) {
-    return false;
-  }
-
-  return favoriteRestaurantIds.value.includes(id);
 });
 
 const detailServiceOptions = computed(() => {
@@ -443,6 +545,18 @@ function toText(input: unknown): string | null {
   return null;
 }
 
+function handleSortChange(event: Event) {
+  const nextSort = (event.target as HTMLSelectElement).value;
+
+  if (isSortOption(nextSort)) {
+    emit("changeSort", nextSort);
+  }
+}
+
+function isSortOption(value: string): value is RestaurantSortOption {
+  return ["recommended", "rating_desc", "reviews_desc", "distance_asc"].includes(value);
+}
+
 function formatRating(restaurant: RestaurantPin): string {
   return restaurant.rating !== null ? restaurant.rating.toFixed(1) : "-";
 }
@@ -472,7 +586,7 @@ function formatPlaceMeta(restaurant: RestaurantPin): string {
     <header class="grid gap-3">
       <div class="flex items-center justify-between gap-3">
         <p class="m-0 text-[0.95rem] font-medium text-slate-500">
-          {{ t("panel.restaurants") }}
+          {{ activeQueryLabel }}
         </p>
 
         <UButton
@@ -492,9 +606,25 @@ function formatPlaceMeta(restaurant: RestaurantPin): string {
       </div>
 
       <div class="flex flex-wrap items-center justify-between gap-3">
-        <p class="m-0 text-[1.1rem] text-slate-700">
-          {{ t("panel.sort") }}: <strong>{{ t("panel.recommended") }}</strong>
-        </p>
+        <div class="flex items-center gap-2">
+          <p class="m-0 text-[1.02rem] text-slate-700">
+            {{ t("panel.sort") }}
+          </p>
+
+          <select
+            :value="sortBy"
+            class="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-[0.88rem] font-medium text-slate-800 outline-none ring-sky-500 transition focus:ring-2"
+            @change="handleSortChange"
+          >
+            <option
+              v-for="option in sortOptions"
+              :key="option.key"
+              :value="option.key"
+            >
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
 
         <div class="flex items-center gap-2">
           <UButton
@@ -510,15 +640,38 @@ function formatPlaceMeta(restaurant: RestaurantPin): string {
       </div>
 
       <div class="flex flex-wrap gap-2">
-        <UBadge
-          v-for="chip in chips"
-          :key="chip"
+        <UButton
           color="neutral"
-          variant="soft"
-          class="rounded-full border border-slate-300 bg-slate-100 px-2 py-1 text-slate-900"
+          :variant="sawEnabled ? 'solid' : 'soft'"
+          class="rounded-full border border-slate-300 px-3 py-1.5 text-[0.82rem] font-semibold"
+          @click="emit('toggleSaw')"
         >
-          {{ chip }}
-        </UBadge>
+          {{ sawLabel }}
+        </UButton>
+
+        <UButton
+          v-for="chip in chips"
+          :key="chip.key"
+          color="neutral"
+          :variant="activeFilter === chip.key ? 'solid' : 'soft'"
+          class="rounded-full border border-slate-300 px-3 py-1.5 text-[0.82rem]"
+          @click="emit('changeFilter', chip.key)"
+        >
+          {{ chip.label }}
+        </UButton>
+      </div>
+
+      <div class="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
+        <UButton
+          v-for="preset in queryPresets"
+          :key="preset.value"
+          color="primary"
+          :variant="activeQuery === preset.value ? 'solid' : 'outline'"
+          class="shrink-0 rounded-full px-3 py-1 text-[0.8rem] font-medium"
+          @click="emit('changeQuery', preset.value)"
+        >
+          {{ preset.label }}
+        </UButton>
       </div>
 
       <p class="m-0 text-[0.86rem] text-slate-500">
@@ -547,13 +700,14 @@ function formatPlaceMeta(restaurant: RestaurantPin): string {
         v-else-if="restaurants.length === 0"
         class="m-0 rounded-xl border border-dashed border-slate-200 p-4 text-slate-500"
       >
-        {{ t("panel.empty") }}
+        {{ t("panel.empty", { query: activeQueryLabel }) }}
       </p>
 
       <button
         v-for="(restaurant, index) in restaurants"
         v-else
         :key="restaurant.id"
+        :ref="(el: HTMLElement | null) => observeCard(el, restaurant)"
         type="button"
         class="grid w-full cursor-pointer appearance-none grid-cols-[140px_minmax(0,1fr)] gap-4 rounded-2xl border border-slate-200 bg-white p-3 text-left transition duration-200 hover:-translate-y-px hover:border-sky-300 hover:shadow-[0_18px_38px_rgba(15,23,42,0.08)] max-[640px]:grid-cols-1"
         :class="

@@ -2,12 +2,17 @@
 import LeafletMap from '~/components/maps/LeafletMap.vue'
 import RestaurantExplorerPanel from '~/components/maps/RestaurantExplorerPanel.vue'
 import type { Coordinate } from '~/types/location'
-import type { RestaurantPin } from '~/types/restaurant'
+import type {
+  RestaurantListFilter,
+  RestaurantPin,
+  RestaurantSortOption
+} from '~/types/restaurant'
 import {
   DEFAULT_LOCALE,
   LOCALE_OPTIONS,
   type AppLocale
 } from '~/config/i18n'
+import { QUERY_PRESETS, RESTAURANT_SEARCH_CONFIG } from '~/config/places'
 
 const {
   coordinate,
@@ -23,7 +28,6 @@ const {
   restaurants,
   loading: restaurantsLoading,
   error: restaurantsError,
-  count: restaurantCount,
   selectedRestaurant,
   detail,
   detailLoading,
@@ -31,8 +35,23 @@ const {
   isDetailOpen,
   fetchRestaurantsByCoordinate,
   openRestaurantDetail,
+  prefetchRestaurantDetail,
   closeRestaurantDetail
 } = useRestaurantMap()
+
+const sawEnabled = ref(true)
+const activeFilter = ref<RestaurantListFilter>('all')
+const sortBy = ref<RestaurantSortOption>('recommended')
+const activeQuery = ref<string>(RESTAURANT_SEARCH_CONFIG.query)
+
+const visibleRestaurants = computed(() => {
+  const filtered = filterRestaurants(restaurants.value, activeFilter.value)
+  return sortRestaurants(filtered, sortBy.value, coordinate.value)
+})
+
+const visibleRestaurantCount = computed(() => {
+  return visibleRestaurants.value.length
+})
 
 const {
   locale,
@@ -71,11 +90,18 @@ const mapSectionClass = computed(() => {
 
 let suppressWatchFetch = false
 
+async function fetchRestaurantsWithCurrentOptions() {
+  await fetchRestaurantsByCoordinate(coordinate.value, {
+    saw: sawEnabled.value,
+    query: activeQuery.value
+  })
+}
+
 onMounted(async () => {
   suppressWatchFetch = true
   await resolveUserLocation()
   suppressWatchFetch = false
-  await fetchRestaurantsByCoordinate(coordinate.value)
+  await fetchRestaurantsWithCurrentOptions()
 })
 
 watch(
@@ -89,27 +115,30 @@ watch(
       return
     }
 
-    fetchRestaurantsByCoordinate(coordinate.value)
+    fetchRestaurantsWithCurrentOptions()
   }
 )
 
 watch(localeRequestKey, async () => {
-  await fetchRestaurantsByCoordinate(coordinate.value)
+  await fetchRestaurantsWithCurrentOptions()
 
   if (isDetailOpen.value && selectedRestaurant.value) {
     await openRestaurantDetail(selectedRestaurant.value)
   }
 })
 
+watch(sawEnabled, async () => {
+  await fetchRestaurantsWithCurrentOptions()
+})
+
 async function handleLocateMe() {
   suppressWatchFetch = true
   await resolveUserLocation()
   suppressWatchFetch = false
-  await fetchRestaurantsByCoordinate(coordinate.value)
+  await fetchRestaurantsWithCurrentOptions()
 }
 
 function handleMapPick(coordinateFromMap: Coordinate) {
-  const formatted = `${coordinateFromMap.lat.toFixed(5)}, ${coordinateFromMap.lng.toFixed(5)}`
   setManualLocation(
     coordinateFromMap,
     'search',
@@ -128,6 +157,27 @@ function handleCloseRestaurantDetail() {
   closeRestaurantDetail()
 }
 
+function handleToggleSaw() {
+  sawEnabled.value = !sawEnabled.value
+}
+
+function handleChangeFilter(nextFilter: RestaurantListFilter) {
+  activeFilter.value = nextFilter
+}
+
+function handleChangeSort(nextSort: RestaurantSortOption) {
+  sortBy.value = nextSort
+}
+
+async function handleChangeQuery(nextQuery: string) {
+  activeQuery.value = nextQuery
+  await fetchRestaurantsWithCurrentOptions()
+}
+
+function handlePrefetchDetail(restaurant: RestaurantPin) {
+  prefetchRestaurantDetail(restaurant)
+}
+
 function toggleSidebar() {
   isSidebarOpen.value = !isSidebarOpen.value
 }
@@ -136,6 +186,156 @@ function openSidebar() {
   if (!isSidebarOpen.value) {
     isSidebarOpen.value = true
   }
+}
+
+function filterRestaurants(input: RestaurantPin[], filter: RestaurantListFilter): RestaurantPin[] {
+  if (filter === 'all') {
+    return input
+  }
+
+  if (filter === 'price') {
+    return input.filter(item => Boolean(item.price))
+  }
+
+  if (filter === 'open_now') {
+    return input.filter(item => isOpenNow(item.openState))
+  }
+
+  if (filter === 'delivery') {
+    return input.filter(item => hasServiceOption(item, key => key.includes('delivery') || key.includes('antar')))
+  }
+
+  if (filter === 'takeout') {
+    return input.filter(item => hasServiceOption(item, key => key.includes('takeout') || key.includes('bawa')))
+  }
+
+  if (filter === 'halal') {
+    return input.filter(item => hasOfferingTag(item, [/\bhalal\b/i, /\bsyariah\b/i]))
+  }
+
+  if (filter === 'alcohol') {
+    return input.filter(item => hasOfferingTag(item, [
+      /\balcohol\b/i,
+      /\balkohol\b/i,
+      /\bbeer\b/i,
+      /\bwine\b/i,
+      /\bcocktail\b/i,
+      /\bpub\b/i,
+      /\bbar\b/i,
+      /\bliquor\b/i,
+      /\bbrewery\b/i,
+      /\bvodka\b/i,
+      /\bwhisk(?:y|e)y\b/i,
+      /\bminuman keras\b/i
+    ]))
+  }
+
+  return input
+}
+
+function sortRestaurants(
+  input: RestaurantPin[],
+  sort: RestaurantSortOption,
+  center: Coordinate
+): RestaurantPin[] {
+  if (sort === 'recommended') {
+    return [...input]
+  }
+
+  const list = [...input]
+
+  if (sort === 'rating_desc') {
+    return list.sort((a, b) => {
+      const ratingA = a.rating ?? Number.NEGATIVE_INFINITY
+      const ratingB = b.rating ?? Number.NEGATIVE_INFINITY
+
+      if (ratingA !== ratingB) {
+        return ratingB - ratingA
+      }
+
+      const reviewsA = a.reviews ?? Number.NEGATIVE_INFINITY
+      const reviewsB = b.reviews ?? Number.NEGATIVE_INFINITY
+      return reviewsB - reviewsA
+    })
+  }
+
+  if (sort === 'reviews_desc') {
+    return list.sort((a, b) => {
+      const reviewsA = a.reviews ?? Number.NEGATIVE_INFINITY
+      const reviewsB = b.reviews ?? Number.NEGATIVE_INFINITY
+      return reviewsB - reviewsA
+    })
+  }
+
+  return list.sort((a, b) => {
+    return distanceScore(a, center) - distanceScore(b, center)
+  })
+}
+
+function hasServiceOption(
+  restaurant: RestaurantPin,
+  match: (key: string) => boolean
+): boolean {
+  return Object.entries(restaurant.serviceOptions).some(([key, value]) => {
+    return Boolean(value) && match(key.toLowerCase())
+  })
+}
+
+function isOpenNow(openState: string | null): boolean {
+  if (!openState) {
+    return false
+  }
+
+  const normalized = openState.toLowerCase().replace(/\s+/g, ' ').trim()
+
+  if (normalized.length === 0) {
+    return false
+  }
+
+  if (/(^|[\s\u00b7])(?:buka|open)\s*24\s*jam\b/.test(normalized) || /open\s*24\s*hours\b/.test(normalized)) {
+    return true
+  }
+
+  if (/^(?:segera\s+tutup|closing\s+soon)\b/.test(normalized)) {
+    return true
+  }
+
+  if (/^(?:buka|open)\b/.test(normalized)) {
+    return true
+  }
+
+  if (/^(?:tutup|closed)\b/.test(normalized)) {
+    return false
+  }
+
+  if (/(^|[\s\u00b7])(?:segera\s+tutup|closing\s+soon)\b/.test(normalized)) {
+    return true
+  }
+
+  if (/(^|[\s\u00b7])(?:buka|open)\b/.test(normalized) && !/(^|[\s\u00b7])(?:tutup|closed)\b/.test(normalized)) {
+    return true
+  }
+
+  return false
+}
+
+function hasOfferingTag(restaurant: RestaurantPin, patterns: RegExp[]): boolean {
+  const haystack = restaurant.extensionOfferings
+    .map(item => item.trim())
+    .filter(item => item.length > 0)
+    .join(' ')
+
+  if (haystack.length === 0) {
+    return false
+  }
+
+  return patterns.some(pattern => pattern.test(haystack))
+}
+
+function distanceScore(restaurant: RestaurantPin, center: Coordinate): number {
+  const latDiff = restaurant.lat - center.lat
+  const lngDiff = restaurant.lng - center.lng
+  return (latDiff * latDiff) + (lngDiff * lngDiff)
 }
 </script>
 
@@ -149,10 +349,15 @@ function openSidebar() {
       :label="label"
       :status="status"
       :loading="loading"
-      :restaurants="restaurants"
+      :restaurants="visibleRestaurants"
       :restaurants-loading="restaurantsLoading"
       :restaurants-error="restaurantsError"
-      :restaurant-count="restaurantCount"
+      :restaurant-count="visibleRestaurantCount"
+      :saw-enabled="sawEnabled"
+      :active-filter="activeFilter"
+      :sort-by="sortBy"
+      :active-query="activeQuery"
+      :query-presets="QUERY_PRESETS"
       :selected-restaurant-id="selectedRestaurant?.id || null"
       :detail="detail"
       :detail-loading="detailLoading"
@@ -162,6 +367,11 @@ function openSidebar() {
       @open-detail="handleOpenRestaurantDetail"
       @close-detail="handleCloseRestaurantDetail"
       @toggle-sidebar="toggleSidebar"
+      @toggle-saw="handleToggleSaw"
+      @change-filter="handleChangeFilter"
+      @change-sort="handleChangeSort"
+      @change-query="handleChangeQuery"
+      @prefetch-detail="handlePrefetchDetail"
     />
 
     <section :class="mapSectionClass">
@@ -212,11 +422,12 @@ function openSidebar() {
       <ClientOnly>
         <LeafletMap
           :center="coordinate"
-          :restaurants="restaurants"
+          :restaurants="visibleRestaurants"
           :selected-restaurant-id="selectedRestaurant?.id || null"
           :zoom="14"
           @pick-location="handleMapPick"
           @select-restaurant="handleOpenRestaurantDetail"
+          @prefetch-restaurant="handlePrefetchDetail"
         />
       </ClientOnly>
 

@@ -5,12 +5,12 @@ import {
   IP_LOCATION_ENDPOINT
 } from '~/config/location'
 
-interface IpWhoResponse {
-  success: boolean
-  latitude: number
-  longitude: number
+interface IpApiResponse {
+  status: 'success' | 'fail'
+  lat: number
+  lon: number
   city?: string
-  region?: string
+  regionName?: string
   country?: string
   message?: string
 }
@@ -49,18 +49,18 @@ async function ipCoordinate(messages: {
     throw new Error(messages.requestFailed)
   }
 
-  const result = await response.json() as IpWhoResponse
+  const result = await response.json() as IpApiResponse
 
-  if (!result.success || !Number.isFinite(result.latitude) || !Number.isFinite(result.longitude)) {
+  if (result.status !== 'success' || !Number.isFinite(result.lat) || !Number.isFinite(result.lon)) {
     throw new Error(result.message || messages.invalid)
   }
 
-  const parts = [result.city, result.region, result.country].filter(Boolean)
+  const parts = [result.city, result.regionName, result.country].filter(Boolean)
 
   return {
     coordinate: {
-      lat: result.latitude,
-      lng: result.longitude
+      lat: result.lat,
+      lng: result.lon
     },
     label: parts.length > 0 ? parts.join(', ') : messages.fallbackLabel
   }
