@@ -14,7 +14,7 @@ Frontend Rasanta adalah web app untuk eksplorasi tempat/restaurant berbasis peta
 
 - Node.js 20+
 - pnpm (repo ini menggunakan `pnpm@10`)
-- Backend Rasanta aktif di `http://localhost:3000`
+- Backend Rasanta aktif di `http://localhost:8000`
 
 ## Instalasi
 
@@ -24,7 +24,7 @@ pnpm install
 
 ## Menjalankan Frontend
 
-Development server (default port frontend: `3001`):
+Development server (default port frontend: `3000`):
 
 ```bash
 pnpm dev
@@ -32,16 +32,16 @@ pnpm dev
 
 Setelah jalan, buka:
 
-- `http://localhost:3001`
+- `http://localhost:3000`
 
 ## Konfigurasi API Backend
 
-Secara default frontend memanggil backend ke `http://localhost:3000`.
+Secara default frontend memanggil backend ke path relatif yang sama domain (`/api/v1/...`).
 
-Jika perlu ganti endpoint backend, set env variable berikut sebelum menjalankan app:
+Untuk local development, set base URL backend via env:
 
 ```bash
-NUXT_PUBLIC_API_BASE=http://localhost:3000
+cp .env.example .env
 ```
 
 ## Script yang Tersedia
