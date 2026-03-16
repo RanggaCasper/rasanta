@@ -2,7 +2,7 @@ APP_NAME=rasanta
 BUILD_DIR=bin
 MAIN_PATH=cmd/server/main.go
 
-.PHONY: help deps tidy build run run-alt dev air-install test fmt clean
+.PHONY: help deps tidy build run run-alt dev air-install test fmt clean parser-sim
 
 help:
 	@echo "Available targets:"

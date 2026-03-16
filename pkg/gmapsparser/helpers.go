@@ -26,8 +26,8 @@ var (
 		"minggu":    "sunday",
 	}
 
-	dataIDPattern  = regexp.MustCompile(`(?i)^0x[0-9a-f]+:0x[0-9a-f]+$`)
-	phonePattern   = regexp.MustCompile(`^[+()\-\d\s]{7,}$`)
+	dataIDPattern = regexp.MustCompile(`(?i)^0x[0-9a-f]+:0x[0-9a-f]+$`)
+	phonePattern  = regexp.MustCompile(`^[+()\-\d\s]{7,}$`)
 )
 
 func walk(node any, visit func(any) bool) bool {

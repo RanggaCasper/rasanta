@@ -1,8 +1,10 @@
 package gmapsparser
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
+	"os"
 	"strings"
 )
 
@@ -300,12 +302,25 @@ func extractWebsite(block []any) *string {
 }
 
 func extractThumbnail(block []any) *string {
-	if thumb := stringOrNil(safeGet(block, 37, 0, 0, 6, 0)); thumb != nil {
+	if thumb := stringOrNil(safeGet(block, 72, 0, 1, 6, 0)); thumb != nil {
+		return thumb
+	}
+
+	if thumb := stringOrNil(safeGet(block, 72, 0, 0, 6, 0)); thumb != nil {
+		return thumb
+	}
+
+	if thumb := stringOrNil(safeGet(block, 37, 0, 1, 6, 0)); thumb != nil {
 		return thumb
 	}
 
 	return findFirstURL(block, func(rawURL string) bool {
-		return strings.Contains(rawURL, "googleusercontent.com") || strings.Contains(rawURL, "streetviewpixels-pa.googleapis.com")
+		if !strings.HasPrefix(rawURL, "https://") {
+			return false
+		}
+
+		return strings.Contains(rawURL, "googleusercontent.com") ||
+			strings.Contains(rawURL, "streetviewpixels-pa.googleapis.com")
 	})
 }
 
@@ -701,6 +716,19 @@ func extractWaitEstimates(block []any) []map[string]any {
 	return estimates
 }
 
+func saveBlockToFile(block []any, filename string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+
+	return encoder.Encode(block)
+}
+
 func toPlaceOutput(block []any, position int, hl string) map[string]any {
 	dataID := safeGet(block, 10)
 	title := safeGet(block, 11)
@@ -762,7 +790,7 @@ func toPlaceOutput(block []any, position int, hl string) map[string]any {
 	phoneDetails := extractPhoneDetails(block)
 	website := extractWebsite(block)
 	orderOnline := extractOrderOnline(block)
-	thumbnail := extractThumbnail(block)
+	thumbnail := safeGet(block, 37, 0, 0, 6, 0)
 	reviewsLink := extractReviewsLink(block)
 	reviewSnippets := extractReviewSnippets(block)
 	userReviews := extractUserReviews(block, 20)

@@ -8,6 +8,7 @@ import (
 	"rasanta/internal/service"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func NewHTTPServer(cfg config.Config) *fiber.App {
@@ -17,6 +18,14 @@ func NewHTTPServer(cfg config.Config) *fiber.App {
 	placeHandler := handler.NewPlaceHandler(placeService)
 
 	app := fiber.New(fiber.Config{AppName: cfg.AppName})
+
+	// Tambahkan middleware CORS untuk mengizinkan permintaan dari frontend
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+		AllowHeaders: "*",
+		AllowMethods: "*",
+	}))
+
 	// Register semua route
 	router.Register(app, placeHandler)
 
