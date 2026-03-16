@@ -129,6 +129,122 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+          body: |
+            ## Rasanta ${{ github.ref_name }}
+
+            Release ini berisi komponen backend dan frontend yang siap digunakan untuk deployment production.
+
+            ### Backend Binary
+
+            Binary backend tersedia untuk beberapa platform berikut:
+
+            * **Linux**: amd64, arm64
+            * **Windows**: amd64, arm64
+            * **macOS (Darwin)**: amd64, arm64
+
+            Setiap binary juga disertai dengan **file checksum SHA256** untuk verifikasi integritas file.
+
+            ### Frontend Package
+
+            * `website_${{ github.ref_name }}.tar.gz` - build production dari aplikasi frontend.
+
+            ---
+
+            # Cara Menjalankan Backend (Production)
+
+            ### 1. Download Binary
+
+            Unduh binary sesuai dengan sistem operasi dari **assets release**.
+
+            ### 2. Siapkan Struktur Folder
+
+            Pastikan struktur runtime seperti berikut:
+
+            ```
+            rasanta_binary
+            .env
+            .secrets/google_maps_cookie.txt
+            ```
+
+            Contoh:
+
+            ```
+            rasanta_${{ github.ref_name }}_windows_amd64.exe
+            .env
+            .secrets/google_maps_cookie.txt
+            ```
+
+            ### 3. Konfigurasi Environment
+
+            Isi file `.env` dengan contoh konfigurasi berikut:
+
+            ```
+            PORT=8000
+            HTTP_TIMEOUT_SECONDS=30
+            GOOGLE_MAPS_COOKIE_FILE=.secrets/google_maps_cookie.txt
+            ```
+
+            ### 4. Menjalankan Server
+
+            **Windows (PowerShell)**
+
+            ```
+            .\rasanta_${{ github.ref_name }}_windows_amd64.exe
+            ```
+
+            **Linux / macOS**
+
+            ```
+            ./rasanta_${{ github.ref_name }}_linux_amd64
+            ```
+
+            ### 5. Cek Status Server
+
+            Buka endpoint berikut untuk memastikan server berjalan:
+
+            ```
+            http://localhost:8000/health
+            ```
+
+            ---
+
+            # Cara Menjalankan Frontend (Production)
+
+            ### 1. Extract File
+
+            Extract file berikut:
+
+            ```
+            website_${{ github.ref_name }}.tar.gz
+            ```
+
+            ### 2. Jalankan Server Nuxt
+
+            Windows (PowerShell):
+
+            ```
+            $env:PORT=3000
+            $env:NUXT_PUBLIC_API_BASE=https://localhost:8000
+            node ./server/index.mjs
+            ```
+
+            Linux / macOS:
+
+            ```
+            export PORT=3000
+            export NUXT_PUBLIC_API_BASE=https://localhost:8000
+            node ./server/index.mjs
+            ```
+
+            ---
+
+            # Endpoint API Utama
+
+            * `GET /api/v1/places`
+            * `GET /api/v1/places/detail`
+            * `GET /health`
+
+            ---
           files: |
             release-assets/backend/*
             release-assets/frontend/*
